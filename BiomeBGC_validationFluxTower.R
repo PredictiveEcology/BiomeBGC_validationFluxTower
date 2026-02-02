@@ -5,7 +5,7 @@
 ## they are namespaced to the module, just like functions in R packages.
 ## If exact location is required, functions will be: `sim$.mods$<moduleName>$FunctionName`.
 defineModule(sim, list(
-  name = "BiomeBGC_validationFluxTowers",
+  name = "BiomeBGC_validationFluxTower",
   description = "",
   keywords = "",
   authors = c(
@@ -13,11 +13,11 @@ defineModule(sim, list(
     person("Céline", "Boisvenue", email = "celine.boisvenue@nrcan-rncan.gc.ca", role = "ctb")
   ),
   childModules = character(0),
-  version = list(BiomeBGC_validationFluxTowers = "0.0.0.9000"),
+  version = list(BiomeBGC_validationFluxTower = "0.0.0.9000"),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list("citation.bib"),
-  documentation = list("NEWS.md", "README.md", "BiomeBGC_validationFluxTowers.Rmd"),
+  documentation = list("NEWS.md", "README.md", "BiomeBGC_validationFluxTower.Rmd"),
   reqdPkgs = list("SpaDES.core (>= 3.0.4)", "ggplot2"),
   parameters = bindrows(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
@@ -47,17 +47,17 @@ defineModule(sim, list(
   inputObjects = bindrows(
     expectsInput(objectName = "studyArea", objectClass = NA, desc = NA, sourceURL = NA),
     expectsInput(objectName = "towerMetaData", objectClass = NA, desc = NA, sourceURL = NA),
-    expectsInputs(objectName = "towerFluxData", objectClass = NA, desc = NA, sourceURL = NA),
+    expectsInput(objectName = "towerFluxData", objectClass = NA, desc = NA, sourceURL = NA),
     expectsInput(objectName = "rasterToMatch", objectClass = NA, desc = NA, sourceURL = NA),
-    expectsInputs(objectName = "dailyOutput", objectClass = NA, desc = NA, sourceURL = NA),
-    expectsInputs(objectName = "annualSummary", objectClass = NA, desc = NA, sourceURL = NA)
+    expectsInput(objectName = "dailyOutput", objectClass = NA, desc = NA, sourceURL = NA),
+    expectsInput(objectName = "annualSummary", objectClass = NA, desc = NA, sourceURL = NA)
   ),
   outputObjects = bindrows(
     createsOutput(objectName = "validationSummary", objectClass = NA, desc = NA)
   )
 ))
 
-doEvent.BiomeBGC_validationFluxTowers = function(sim, eventTime, eventType) {
+doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
   switch(
     eventType,
     init = {
@@ -68,8 +68,8 @@ doEvent.BiomeBGC_validationFluxTowers = function(sim, eventTime, eventType) {
       sim <- Init(sim)
       
       # schedule future event(s)
-      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "BiomeBGC_validationFluxTowers", "plot")
-      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "BiomeBGC_validationFluxTowers", "save")
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "BiomeBGC_validationFluxTower", "plot")
+      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "BiomeBGC_validationFluxTower", "save")
     },
     plot = {
       # ! ----- EDIT BELOW ----- ! #
@@ -79,7 +79,7 @@ doEvent.BiomeBGC_validationFluxTowers = function(sim, eventTime, eventType) {
       # schedule future event(s)
       
       # e.g.,
-      #sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "BiomeBGC_validationFluxTowers", "plot")
+      #sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "BiomeBGC_validationFluxTower", "plot")
       
       # ! ----- STOP EDITING ----- ! #
     },
@@ -93,7 +93,7 @@ doEvent.BiomeBGC_validationFluxTowers = function(sim, eventTime, eventType) {
       # schedule future event(s)
       
       # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + P(sim)$.saveInterval, "BiomeBGC_validationFluxTowers", "save")
+      # sim <- scheduleEvent(sim, time(sim) + P(sim)$.saveInterval, "BiomeBGC_validationFluxTower", "save")
       
       # ! ----- STOP EDITING ----- ! #
     },
@@ -107,7 +107,7 @@ doEvent.BiomeBGC_validationFluxTowers = function(sim, eventTime, eventType) {
       # schedule future event(s)
       
       # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "BiomeBGC_validationFluxTowers", "templateEvent")
+      # sim <- scheduleEvent(sim, time(sim) + increment, "BiomeBGC_validationFluxTower", "templateEvent")
       
       # ! ----- STOP EDITING ----- ! #
     },
@@ -121,7 +121,7 @@ doEvent.BiomeBGC_validationFluxTowers = function(sim, eventTime, eventType) {
       # schedule future event(s)
       
       # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "BiomeBGC_validationFluxTowers", "templateEvent")
+      # sim <- scheduleEvent(sim, time(sim) + increment, "BiomeBGC_validationFluxTower", "templateEvent")
       
       # ! ----- STOP EDITING ----- ! #
     },
