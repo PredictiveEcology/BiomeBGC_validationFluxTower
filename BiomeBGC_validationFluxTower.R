@@ -72,7 +72,6 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
     plot = {
       figPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower")
       #1.  Plot comparing daily GPP
-      #1.1 prepare the data
       colToKeep <- c("TIMESTAMP", "GPP_DT_VUT_REF")
       towerData <- sim$towerDailyFlux[ , colToKeep]
       
@@ -94,9 +93,12 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       )
       
       dtOut <- merge(towerData, sim$dailyOutput[,.(year, timestep, day, daily_gpp)])
+      # put in the same units and rename columns
+      dtOut <- dtOut[, .(timestep, year, day, obsGPP = totGPPmean, predGPP = daily_gpp*1000)]
+      
       Plots(
         dtOut,
-        fn = dailyGPPplot,
+        fn = GPPplot,
         filename = "dailyGPP",
         types = "png",
         path = figPath,
@@ -111,10 +113,71 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
         ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
       )
       
-      # e.g.,
-      #sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "BiomeBGC_validationFluxTower", "plot")
+      #2.  Plot comparing monthly GPP
+      towerData <- sim$towerMonthlyFlux[ , colToKeep]
       
-      # ! ----- STOP EDITING ----- ! #
+      # switch -9999 to NA
+      towerData[towerData == -9999] <- NA
+      
+      # format dates
+      dates <- as.Date(paste0(as.character(towerData[,"TIMESTAMP"]), "01"), format = "%Y%m%d")
+      
+      years <- format(dates, "%Y")
+      nyear <- length(unique(years))
+      towerData <- data.table(
+        year = as.integer(years),
+        month = rep(c(1:12), nyear),
+        totGPPmean = towerData[,"GPP_DT_VUT_REF"]
+      )
+      
+      dtOut <- merge(towerData, sim$monthlyAverages[,.(year, month, daily_gpp)])
+      # put in the same units and rename columns
+      dtOut <- dtOut[, .(year, month, obsGPP = totGPPmean, predGPP = daily_gpp*1000)]
+      
+      Plots(
+        dtOut,
+        fn = GPPplot,
+        filename = "monthlyGPP",
+        types = "png",
+        path = figPath,
+        ggsaveArgs = list(width = 7, height = 7, units = "in", dpi = 300)
+      )
+      Plots(
+        dtOut,
+        fn = monthlyGPPtimeseries,
+        filename = "monthlyGPPtimeseries",
+        types = "png",
+        path = figPath,
+        ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
+      )
+      
+      # 3. Annual GPP plot
+      towerData <- sim$towerAnnualFlux[ , c("TIMESTAMP", "GPP_DT_VUT_REF", "GPP_DT_VUT_05", "GPP_DT_VUT_95")]
+      
+      # switch -9999 to NA
+      towerData[towerData == -9999] <- NA
+      
+      years <- as.numeric(towerData[,"TIMESTAMP"])
+      towerData <- data.table(
+        year = as.integer(years),
+        totGPPmean = towerData[,"GPP_DT_VUT_REF"],
+        totGPPlowerLimit = towerData[,"GPP_DT_VUT_05"],
+        totGPPupperLimit = towerData[,"GPP_DT_VUT_95"]
+      )
+      
+      dtOut <- merge(towerData, sim$annualAverages[,.(year, daily_gpp)]) |> na.omit()
+      # put in the same units and rename columns
+      dtOut <- dtOut[, .(year, obsGPP = totGPPmean, obsGPP05 = totGPPlowerLimit, obsGPP95 = totGPPupperLimit, predGPP = daily_gpp*1000*365)]
+      
+      Plots(
+        dtOut,
+        fn = annualGPPplot,
+        filename = "annualGPP",
+        types = "png",
+        path = figPath,
+        ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
+      )
+      
     },
     save = {
       # ! ----- EDIT BELOW ----- ! #
@@ -262,23 +325,44 @@ dailyGPPtimeseries <- function(gpp){
   dt <- copy(gpp)
   dt[, date := as.Date(paste0(year, day), format = "%Y%j")]
   ggplot(data = dt) +
-    geom_line(aes(x = date, y = daily_gpp*1000, col = "BiomeBGC")) +
-    geom_line(aes(x = date, y = totGPPmean, col = "EC tower")) +
-    scale_color_manual(name = NULL, values = c("BiomeBGC" = "darkblue", "EC tower" = "red")) +
-    labs(x = "Time", y = "GPP (gC/m^2/yr)") +
+    geom_line(aes(x = date, y = predGPP, col = "Biome-BGC")) +
+    geom_line(aes(x = date, y = obsGPP, col = "EC tower")) +
+    scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
+    labs(x = "Time", y = "GPP (gC/m^2/day)") +
     scale_x_date(date_breaks = "year", date_labels = "%Y") +
     theme_classic()
 }
 
-dailyGPPplot <- function(gpp){
-  GPPlims <- range(c(gpp$daily_gpp*1000, gpp$totGPPmean), na.rm = T)
+monthlyGPPtimeseries <- function(gpp){
+  dt <- copy(gpp)
+  dt[, date := as.Date(paste0(year, formatC(month, digits = 1, flag = "0"), "01"), format = "%Y%m%d")]
+  ggplot(data = dt) +
+    geom_line(aes(x = date, y = predGPP, col = "Biome-BGC")) +
+    geom_line(aes(x = date, y = obsGPP, col = "EC tower")) +
+    scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
+    labs(x = "Time", y = "GPP (gC/m^2/day)") +
+    scale_x_date(date_breaks = "year", date_labels = "%Y") +
+    theme_classic()
+}
+
+GPPplot <- function(gpp){
+  GPPlims <- range(c(gpp$predGPP, gpp$obsGPP), na.rm = T)
   GPPlims <- c(floor(GPPlims[1]), ceiling(GPPlims[2]))
   ggplot(data = gpp) +
-    geom_point(aes(x = totGPPmean, y = daily_gpp*1000), alpha = 0.5) +
+    geom_point(aes(x = obsGPP, y = predGPP), alpha = 0.5) +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
     scale_x_continuous(expand = c(0, 0), limits = GPPlims) + 
     scale_y_continuous(expand = c(0, 0), limits = GPPlims)  +
-    labs(x = "EC tower GPP (gC/m^2/yr)", y = "Biome-BGC (gC/m^2/yr)") +
+    labs(x = "EC tower GPP (gC/m^2/day)", y = "Biome-BGC (gC/m^2/day)") +
+    theme_classic()
+}
+
+annualGPPplot <- function(gpp){
+  ggplot(gpp) +
+    geom_pointrange(aes(x = as.factor(year), y = obsGPP, ymin = obsGPP05, ymax = obsGPP95, col = "EC tower"), position = position_nudge(x = -0.1)) +
+    geom_point(aes(x = as.factor(year), y = predGPP, col = "Biome-BGC"), position = position_nudge(x = 0.1)) +
+    scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
+    labs(x = "Year", y = "GPP (gC/m^2/yr)") +
     theme_classic()
 }
 
