@@ -72,32 +72,14 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
     plot = {
       figPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower")
       #1.  Plot comparing daily GPP
-      colToKeep <- c("TIMESTAMP", "GPP_DT_VUT_REF")
-      towerData <- sim$towerDailyFlux[ , colToKeep]
-      
-      # switch -9999 to NA
-      towerData[towerData == -9999] <- NA
-      
-      # format dates
-      dates <- as.Date(as.character(towerData[,"TIMESTAMP"]), format = "%Y%m%d")
-      # remove Feb 29th (not in BiomeBGC)
-      feb29 <- format(dates, "%d") == "29" & format(dates, "%m") == "02"
-      towerData <- towerData[!feb29,]
-      
-      years <- format(dates[!feb29], "%Y")
-      nyear <- length(unique(years))
-      towerData <- data.table(
-        year = as.integer(years),
-        day = rep(c(1:365), nyear),
-        totGPPmean = towerData[,"GPP_DT_VUT_REF"]
+      plot_dt <- mergeGPPdata(
+        towerData = sim$towerDailyFlux,
+        BiomeBGCData = sim$dailyOutput,
+        timescale = "day"
       )
       
-      dtOut <- merge(towerData, sim$dailyOutput[,.(year, timestep, day, daily_gpp)])
-      # put in the same units and rename columns
-      dtOut <- dtOut[, .(timestep, year, day, obsGPP = totGPPmean, predGPP = daily_gpp*1000)]
-      
       Plots(
-        dtOut,
+        plot_dt,
         fn = GPPplot,
         filename = "dailyGPP",
         types = "png",
@@ -105,7 +87,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
         ggsaveArgs = list(width = 7, height = 7, units = "in", dpi = 300)
       )
       Plots(
-        dtOut,
+        plot_dt,
         fn = dailyGPPtimeseries,
         filename = "dailyGPPtimeseries",
         types = "png",
@@ -114,28 +96,14 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       )
       
       #2.  Plot comparing monthly GPP
-      towerData <- sim$towerMonthlyFlux[ , colToKeep]
-      
-      # switch -9999 to NA
-      towerData[towerData == -9999] <- NA
-      
-      # format dates
-      dates <- as.Date(paste0(as.character(towerData[,"TIMESTAMP"]), "01"), format = "%Y%m%d")
-      
-      years <- format(dates, "%Y")
-      nyear <- length(unique(years))
-      towerData <- data.table(
-        year = as.integer(years),
-        month = rep(c(1:12), nyear),
-        totGPPmean = towerData[,"GPP_DT_VUT_REF"]
+      plot_dt <- mergeGPPdata(
+        towerData = sim$towerMonthlyFlux,
+        BiomeBGCData = sim$monthlyAverages,
+        timescale = "month"
       )
       
-      dtOut <- merge(towerData, sim$monthlyAverages[,.(year, month, daily_gpp)])
-      # put in the same units and rename columns
-      dtOut <- dtOut[, .(year, month, obsGPP = totGPPmean, predGPP = daily_gpp*1000)]
-      
       Plots(
-        dtOut,
+        plot_dt,
         fn = GPPplot,
         filename = "monthlyGPP",
         types = "png",
@@ -143,7 +111,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
         ggsaveArgs = list(width = 7, height = 7, units = "in", dpi = 300)
       )
       Plots(
-        dtOut,
+        plot_dt,
         fn = monthlyGPPtimeseries,
         filename = "monthlyGPPtimeseries",
         types = "png",
@@ -152,25 +120,14 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       )
       
       # 3. Annual GPP plot
-      towerData <- sim$towerAnnualFlux[ , c("TIMESTAMP", "GPP_DT_VUT_REF", "GPP_DT_VUT_05", "GPP_DT_VUT_95")]
-      
-      # switch -9999 to NA
-      towerData[towerData == -9999] <- NA
-      
-      years <- as.numeric(towerData[,"TIMESTAMP"])
-      towerData <- data.table(
-        year = as.integer(years),
-        totGPPmean = towerData[,"GPP_DT_VUT_REF"],
-        totGPPlowerLimit = towerData[,"GPP_DT_VUT_05"],
-        totGPPupperLimit = towerData[,"GPP_DT_VUT_95"]
+      plot_dt <- mergeGPPdata(
+        towerData = sim$towerAnnualFlux,
+        BiomeBGCData = sim$annualAverages,
+        timescale = "year",
+        confInt = 95
       )
-      
-      dtOut <- merge(towerData, sim$annualAverages[,.(year, daily_gpp)]) |> na.omit()
-      # put in the same units and rename columns
-      dtOut <- dtOut[, .(year, obsGPP = totGPPmean, obsGPP05 = totGPPlowerLimit, obsGPP95 = totGPPupperLimit, predGPP = daily_gpp*1000*365)]
-      
       Plots(
-        dtOut,
+        plot_dt,
         fn = annualGPPplot,
         filename = "annualGPP",
         types = "png",
@@ -195,38 +152,19 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
     },
     compareGPP = {
       
-      # Evaluate daily predictions
-      # format the flux tower data
-      colToKeep <- c("TIMESTAMP", "GPP_DT_VUT_REF")
-      towerData <- sim$towerDailyFlux[ , colToKeep]
-      
-      # switch -9999 to NA
-      towerData[towerData == -9999] <- NA
-      
-      # format dates
-      dates <- as.Date(as.character(towerData[,"TIMESTAMP"]), format = "%Y%m%d")
-      # remove Feb 29th (not in BiomeBGC)
-      feb29 <- format(dates, "%d") == "29" & format(dates, "%m") == "02"
-      towerData <- towerData[!feb29,]
-      
-      years <- format(dates[!feb29], "%Y")
-      nyear <- length(unique(years))
-      towerData <- data.table(
-        year = as.integer(years),
-        day = rep(c(1:365), nyear),
-        totGPPmean = towerData[,"GPP_DT_VUT_REF"]
+      #1. Evaluate daily predictions
+      dayComparison <- mergeGPPdata(
+        towerData = sim$towerDailyFlux,
+        BiomeBGCData = sim$dailyOutput,
+        timescale = "day"
       ) |> na.omit()
       
-      dtOut <- merge(towerData, sim$dailyOutput[,.(year, timestep, day, daily_gpp)])
-      # put in the same units and rename columns
-      dtOut <- dtOut[, .(timestep, year, day, obsGPP = totGPPmean, predGPP = daily_gpp*1000)]
-      
       # summarize the fit
-      resid <- dtOut$predGPP - dtOut$obsGPP
+      resid <- dayComparison$BGC_GPP - dayComparison$tower_GPP
       
       MAE <- mean(abs(resid))
       RMSE <- sqrt(mean(resid^2))
-      R2 <- cor(dtOut$predGPP, dtOut$obsGPP) ^ 2
+      R2 <- cor(dayComparison$BGC_GPP, dayComparison$tower_GPP) ^ 2
       Bias <- mean(resid)
       
       sim$validationSummary <- data.frame(
@@ -236,74 +174,38 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
         Bias_daily = Bias
       )
       
-      # Evaluate monthly-level predictions
-      towerData <- sim$towerMonthlyFlux[ , colToKeep]
-      
-      # switch -9999 to NA
-      towerData[towerData == -9999] <- NA
-      
-      # format dates
-      dates <- as.Date(paste0(as.character(towerData[,"TIMESTAMP"]), "01"), format = "%Y%m%d")
-      
-      years <- format(dates, "%Y")
-      nyear <- length(unique(years))
-      towerData <- data.table(
-        year = as.integer(years),
-        month = rep(c(1:12), nyear),
-        totGPPmean = towerData[,"GPP_DT_VUT_REF"]
+      #2. Evaluate monthly-level predictions
+      monthComparison <- mergeGPPdata(
+        towerData = sim$towerMonthlyFlux,
+        BiomeBGCData = sim$monthlyAverages,
+        timescale = "month"
       ) |> na.omit()
       
-      dtOut <- merge(towerData, sim$monthlyAverages[,.(year, month, daily_gpp)])
-      # put in the same units and rename columns
-      dtOut <- dtOut[, .(year, month, obsGPP = totGPPmean, predGPP = daily_gpp*1000)]
-      
       # summarize the fit
-      resid <- dtOut$predGPP - dtOut$obsGPP
+      resid <- monthComparison$BGC_GPP - monthComparison$tower_GPP
       
       sim$validationSummary$MAE_monthly <- mean(abs(resid))
       sim$validationSummary$RMSE_monthly <- sqrt(mean(resid^2))
-      sim$validationSummary$R2_monthly <- cor(dtOut$predGPP, dtOut$obsGPP) ^ 2
+      sim$validationSummary$R2_monthly <- cor(monthComparison$BGC_GPP, monthComparison$tower_GPP) ^ 2
       sim$validationSummary$Bias_monthly <- mean(resid)
       
-      # Evaluate year-level predictions
-      towerData <- sim$towerAnnualFlux[ , colToKeep]
-      
-      # switch -9999 to NA
-      towerData[towerData == -9999] <- NA
-      
-      years <- as.numeric(towerData[,"TIMESTAMP"])
-      towerData <- data.table(
-        year = as.integer(years),
-        totGPPmean = towerData[,"GPP_DT_VUT_REF"]
+      #3. Evaluate year-level predictions
+      yearComparison <- mergeGPPdata(
+        towerData = sim$towerAnnualFlux,
+        BiomeBGCData = sim$annualAverages,
+        timescale = "year"
       ) |> na.omit()
       
-      dtOut <- merge(towerData, sim$annualAverages[,.(year, daily_gpp)])
-      # put in the same units and rename columns
-      dtOut <- dtOut[, .(year, obsGPP = totGPPmean, predGPP = daily_gpp*1000*365)]
-      
       # summarize the fit
-      resid <- dtOut$predGPP - dtOut$obsGPP
+      resid <- yearComparison$BGC_GPP - yearComparison$tower_GPP
       
       sim$validationSummary$MAE_annual <- mean(abs(resid))
       sim$validationSummary$RMSE_annual <- sqrt(mean(resid^2))
-      sim$validationSummary$R2_annual <- cor(dtOut$predGPP, dtOut$obsGPP) ^ 2
+      sim$validationSummary$R2_annual <- cor(yearComparison$BGC_GPP, yearComparison$tower_GPP) ^ 2
       sim$validationSummary$Bias_annual <- mean(resid)
       
     },
-    event2 = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-      
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-      
-      # schedule future event(s)
-      
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "BiomeBGC_validationFluxTower", "templateEvent")
-      
-      # ! ----- STOP EDITING ----- ! #
-    },
+    
     warning(noEventWarning(sim))
   )
   return(invisible(sim))
@@ -325,8 +227,8 @@ dailyGPPtimeseries <- function(gpp){
   dt <- copy(gpp)
   dt[, date := as.Date(paste0(year, day), format = "%Y%j")]
   ggplot(data = dt) +
-    geom_line(aes(x = date, y = predGPP, col = "Biome-BGC")) +
-    geom_line(aes(x = date, y = obsGPP, col = "EC tower")) +
+    geom_line(aes(x = date, y = BGC_GPP, col = "Biome-BGC")) +
+    geom_line(aes(x = date, y = tower_GPP, col = "EC tower")) +
     scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
     labs(x = "Time", y = "GPP (gC/m^2/day)") +
     scale_x_date(date_breaks = "year", date_labels = "%Y") +
@@ -337,8 +239,8 @@ monthlyGPPtimeseries <- function(gpp){
   dt <- copy(gpp)
   dt[, date := as.Date(paste0(year, formatC(month, digits = 1, flag = "0"), "01"), format = "%Y%m%d")]
   ggplot(data = dt) +
-    geom_line(aes(x = date, y = predGPP, col = "Biome-BGC")) +
-    geom_line(aes(x = date, y = obsGPP, col = "EC tower")) +
+    geom_line(aes(x = date, y = BGC_GPP, col = "Biome-BGC")) +
+    geom_line(aes(x = date, y = tower_GPP, col = "EC tower")) +
     scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
     labs(x = "Time", y = "GPP (gC/m^2/day)") +
     scale_x_date(date_breaks = "year", date_labels = "%Y") +
@@ -346,10 +248,10 @@ monthlyGPPtimeseries <- function(gpp){
 }
 
 GPPplot <- function(gpp){
-  GPPlims <- range(c(gpp$predGPP, gpp$obsGPP), na.rm = T)
+  GPPlims <- range(c(gpp$BGC_GPP, gpp$tower_GPP), na.rm = T)
   GPPlims <- c(floor(GPPlims[1]), ceiling(GPPlims[2]))
   ggplot(data = gpp) +
-    geom_point(aes(x = obsGPP, y = predGPP), alpha = 0.5) +
+    geom_point(aes(x = tower_GPP, y = BGC_GPP), alpha = 0.5) +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
     scale_x_continuous(expand = c(0, 0), limits = GPPlims) + 
     scale_y_continuous(expand = c(0, 0), limits = GPPlims)  +
@@ -359,8 +261,8 @@ GPPplot <- function(gpp){
 
 annualGPPplot <- function(gpp){
   ggplot(gpp) +
-    geom_pointrange(aes(x = as.factor(year), y = obsGPP, ymin = obsGPP05, ymax = obsGPP95, col = "EC tower"), position = position_nudge(x = -0.1)) +
-    geom_point(aes(x = as.factor(year), y = predGPP, col = "Biome-BGC"), position = position_nudge(x = 0.1)) +
+    geom_pointrange(aes(x = as.factor(year), y = tower_GPP, ymin = tower_GPP_min, ymax = tower_GPP_max, col = "EC tower"), position = position_nudge(x = -0.1)) +
+    geom_point(aes(x = as.factor(year), y = BGC_GPP, col = "Biome-BGC"), position = position_nudge(x = 0.1)) +
     scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
     labs(x = "Year", y = "GPP (gC/m^2/yr)") +
     theme_classic()
