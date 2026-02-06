@@ -1,108 +1,65 @@
 ---
-title: "BiomeBGC_validationFluxTower Manual"
-subtitle: "v.`r SpaDES.core::moduleMetadata(module = 'BiomeBGC_validationFluxTower', path = '..')$version`"
-date: "Last updated: `r Sys.Date()`"
+title: "BiomeBGC_validationFluxTower"
+author: 
+  - Dominique Caron
+  - Céline Boisvenue
+date: "February 2026"
 output:
-  bookdown::html_document2:
-    toc: true
-    toc_float: true
-    theme: sandstone
-    number_sections: false
-    df_print: paged
+  html_document:
     keep_md: yes
 editor_options:
   chunk_output_type: console
-bibliography: citations/references_BiomeBGC_validationFluxTower.bib
-link-citations: true
-always_allow_html: true
 ---
 
-# BiomeBGC_validationFluxTower Module
-
-<!-- the following are text references used in captions for LaTeX compatibility -->
-(ref:BiomeBGC-validationFluxTower) *BiomeBGC_validationFluxTower*
-
-```{r setup-BiomeBGC-validationFluxTower, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE, results = "hold") ## change to eval = TRUE if all chunks are to be evaluated
-
-dir.create("figures", showWarnings = FALSE)
-
-download.file(url = "https://img.shields.io/badge/Made%20with-Markdown-1f425f.png",
-              destfile = "figures/markdownBadge.png",
-              mode = "wb")
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE, results = "hold", message = FALSE)
 ```
 
-[![made-with-Markdown](figures/markdownBadge.png)](https://commonmark.org)
+# Overview
 
-<!-- if knitting to pdf remember to add the pandoc_args: ["--extract-media", "."] option to yml in order to get the badge images -->
+Compares Biome-BGC gross primary productivity predictions to Eddy covariance flux tower's estimates.
 
-#### Authors:
+# Parameters
 
-`r paste(as.character(SpaDES.core::moduleMetadata(module = "BiomeBGC_validationFluxTower", path = '..')$authors), sep = ', ')`
-<!-- ideally separate authors with new lines, '\n' not working -->
+Provide a summary of user-visible parameters.
 
-## Module Overview
-
-### Module summary
-
-Provide a brief summary of what the module does / how to use the module.
-
-Module documentation should be written so that others can use your module.
-This is a template for module documentation, and should be changed to reflect your module.
-
-### Module inputs and parameters
-
-Describe input data required by the module and how to obtain it (e.g., directly from online sources or supplied by other modules)
-If `sourceURL` is specified, `downloadData("BiomeBGC_validationFluxTower", "C:/Users/docaron/Documents/repos")` may be sufficient.
-
-Table \@ref(tab:moduleInputs-BiomeBGC-validationFluxTower) shows the full list of module inputs.
-
-```{r moduleInputs-BiomeBGC-validationFluxTower, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
-df_inputs <- SpaDES.core::moduleInputs("BiomeBGC_validationFluxTower", "C:/Users/docaron/Documents/repos")
-knitr::kable(df_inputs,
-             caption = "List of (ref:BiomeBGC-validationFluxTower) input objects and their description.") |>
-  kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
+```{r moduleParams, echo = FALSE, eval = TRUE}
+df_params <- SpaDES.core::moduleParams("BiomeBGC_validationFluxTower", "..")
+knitr::kable(df_params)
 ```
 
-Summary of user-visible parameters (Table \@ref(tab:moduleParams-BiomeBGC-validationFluxTower))
-
-
-```{r moduleParams-BiomeBGC-validationFluxTower, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
-df_params <- SpaDES.core::moduleParams("BiomeBGC_validationFluxTower", "C:/Users/docaron/Documents/repos")
-knitr::kable(df_params, caption = "List of (ref:BiomeBGC-validationFluxTower) parameters and their description.") |>
-  kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
-```
-
-### Events
+# Events
 
 Describe what happens for each event type.
 
-### Plotting
+## Plotting
 
 Write what is plotted.
 
-### Saving
+## Saving
 
 Write what is saved.
 
-### Module outputs
+# Data dependencies
 
-Description of the module outputs (Table \@ref(tab:moduleOutputs-BiomeBGC-validationFluxTower)).
+## Input data
 
-```{r moduleOutputs-BiomeBGC-validationFluxTower, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
-df_outputs <- SpaDES.core::moduleOutputs("BiomeBGC_validationFluxTower", "C:/Users/docaron/Documents/repos")
-knitr::kable(df_outputs, caption = "List of (ref:BiomeBGC-validationFluxTower) outputs and their description.") |>
-  kableExtra::kable_styling(latex_options = "scale_down", full_width = TRUE)
+Usually, the module is used with `BiomeBGC_dataPrep` and `BiomeBGC_core`. The needed inputs are the flux tower data which needs to be downloaded (e.g., through AmeriFlux). The user also needs to provide the tower coordinates.
+
+```{r moduleInputs, echo = FALSE, eval = TRUE}
+df_inputs <- SpaDES.core::moduleInputs("BiomeBGC_validationFluxTower", "..")
+knitr::kable(df_inputs)
 ```
 
-### Links to other modules
+## Output data
 
-Describe any anticipated linkages to other modules, such as modules that supply input data or do post-hoc analysis.
+Description of the module outputs.
 
-### Getting help
+```{r moduleOutputs, echo = FALSE, eval = TRUE}
+df_outputs <- SpaDES.core::moduleOutputs("BiomeBGC_validationFluxTower", "..")
+knitr::kable(df_outputs)
+```
 
--   provide a way for people to obtain help (e.g., module repository issues page)
+# Links to other modules
 
-## References
-
-<!-- autogenerated from bibligraphy -->
+Inputs can be prepared by `BiomeBGC_core` and `BiomeBGC_dataPrep`.
