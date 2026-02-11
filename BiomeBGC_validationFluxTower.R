@@ -100,6 +100,8 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, end(sim), "BiomeBGC_validationFluxTower", "compareGPP")
       # schedule plotting
       if (anyPlotting(P(sim)$.plots)) sim <- scheduleEvent(sim, end(sim), "BiomeBGC_validationFluxTower", "plot", eventPriority = 12)
+      # schedule saving validation metrics
+      scheduleEvent(sim, end(sim), "BiomeBGC_validationFluxTower", "save", eventPriority = 12)
     },
     plot = {
       figPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower")
@@ -169,18 +171,8 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       
     },
     save = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-      
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-      
-      # schedule future event(s)
-      
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + P(sim)$.saveInterval, "BiomeBGC_validationFluxTower", "save")
-      
-      # ! ----- STOP EDITING ----- ! #
+      outPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower")
+      fwrite(sim$validationSummary, file.path(outPath, "validationSummary.csv"))
     },
     compareGPP = {
       
@@ -193,17 +185,22 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       
       # summarize the fit
       resid <- dayComparison$BGC_GPP - dayComparison$tower_GPP
+      relative_resid <- resid/dayComparison$tower_GPP
       
       MAE <- mean(abs(resid))
       RMSE <- sqrt(mean(resid^2))
       R2 <- cor(dayComparison$BGC_GPP, dayComparison$tower_GPP) ^ 2
       Bias <- mean(resid)
+      Bias_perc <- mean(relative_resid) * 100 
       
       sim$validationSummary <- data.frame(
-        MAE_daily = MAE,
-        RMSE_daily = RMSE,
-        R2_daily = R2,
-        Bias_daily = Bias
+        estimate = "GPP",
+        timescale = "daily",
+        MAE,
+        RMSE,
+        R2,
+        Bias,
+        Bias_perc
       )
       
       #2. Evaluate monthly-level predictions
@@ -215,11 +212,20 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       
       # summarize the fit
       resid <- monthComparison$BGC_GPP - monthComparison$tower_GPP
+      relative_resid <- resid/monthComparison$tower_GPP
       
-      sim$validationSummary$MAE_monthly <- mean(abs(resid))
-      sim$validationSummary$RMSE_monthly <- sqrt(mean(resid^2))
-      sim$validationSummary$R2_monthly <- cor(monthComparison$BGC_GPP, monthComparison$tower_GPP) ^ 2
-      sim$validationSummary$Bias_monthly <- mean(resid)
+      sim$validationSummary <- rbind(
+        sim$validationSummary,
+        data.frame(
+          estimate = "GPP",
+          timescale = "month",
+          MAE,
+          RMSE,
+          R2,
+          Bias,
+          Bias_perc
+        )
+      )
       
       #3. Evaluate year-level predictions
       yearComparison <- mergeGPPdata(
@@ -230,11 +236,20 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       
       # summarize the fit
       resid <- yearComparison$BGC_GPP - yearComparison$tower_GPP
+      relative_resid <- resid/yearComparison$tower_GPP
       
-      sim$validationSummary$MAE_annual <- mean(abs(resid))
-      sim$validationSummary$RMSE_annual <- sqrt(mean(resid^2))
-      sim$validationSummary$R2_annual <- cor(yearComparison$BGC_GPP, yearComparison$tower_GPP) ^ 2
-      sim$validationSummary$Bias_annual <- mean(resid)
+      sim$validationSummary <- rbind(
+        sim$validationSummary,
+        data.frame(
+          estimate = "GPP",
+          timescale = "year",
+          MAE,
+          RMSE,
+          R2,
+          Bias,
+          Bias_perc
+        )
+      )
       
     },
     
