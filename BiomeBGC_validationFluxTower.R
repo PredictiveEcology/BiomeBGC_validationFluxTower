@@ -97,6 +97,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
     init = {
       
       # schedule future event(s)
+      sim <- scheduleEvent(sim, end(sim), "BiomeBGC_validationFluxTower", "compareNEE")
+      # schedule future event(s)
+      sim <- scheduleEvent(sim, end(sim), "BiomeBGC_validationFluxTower", "compareRECO")
+      # schedule future event(s)
       sim <- scheduleEvent(sim, end(sim), "BiomeBGC_validationFluxTower", "compareGPP")
       # schedule plotting
       if (anyPlotting(P(sim)$.plots)) sim <- scheduleEvent(sim, end(sim), "BiomeBGC_validationFluxTower", "plot", eventPriority = 12)
@@ -106,10 +110,11 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
     plot = {
       figPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower")
       #1.  Plot comparing daily GPP
-      plot_dt <- mergeGPPdata(
+      plot_dt <-  mergeData(
         towerData = sim$towerDailyFlux,
         BiomeBGCData = sim$dailyOutput,
-        timescale = "day"
+        timescale = "day",
+        outputVar = "GPP"
       )
       
       Plots(
@@ -130,10 +135,11 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       )
       
       #2.  Plot comparing monthly GPP
-      plot_dt <- mergeGPPdata(
+      plot_dt <- mergeData(
         towerData = sim$towerMonthlyFlux,
         BiomeBGCData = sim$monthlyAverages,
-        timescale = "month"
+        timescale = "month",
+        outputVar = "GPP"
       )
       
       Plots(
@@ -154,11 +160,12 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       )
       
       # 3. Annual GPP plot
-      plot_dt <- mergeGPPdata(
+      plot_dt <- mergeData(
         towerData = sim$towerAnnualFlux,
         BiomeBGCData = sim$annualAverages,
         timescale = "year",
-        confInt = 95
+        confInt = 95,
+        outputVar = "GPP"
       )
       Plots(
         plot_dt,
@@ -174,82 +181,267 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       outPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower")
       fwrite(sim$validationSummary, file.path(outPath, "validationSummary.csv"))
     },
-    compareGPP = {
-      
-      #1. Evaluate daily predictions
-      dayComparison <- mergeGPPdata(
-        towerData = sim$towerDailyFlux,
-        BiomeBGCData = sim$dailyOutput,
-        timescale = "day"
-      ) |> na.omit()
-      
-      # summarize the fit
-      resid <- dayComparison$BGC_GPP - dayComparison$tower_GPP
-      
-      sim$validationSummary <- data.frame(
-        estimate = "GPP",
-        unit = "gc/m2/day",
-        timescale = "daily",
-        towerMean = mean(dayComparison$tower_GPP),
-        BGCMean = mean(dayComparison$BGC_GPP),
-        MAE = mean(abs(resid)),
-        RMSE = sqrt(mean(resid^2)),
-        R2 = cor(dayComparison$BGC_GPP, dayComparison$tower_GPP) ^ 2,
-        Bias = mean(resid),
-        Bias_perc = mean(resid)/mean(dayComparison$tower_GPP) * 100
-      )
-      
-      #2. Evaluate monthly-level predictions
-      monthComparison <- mergeGPPdata(
-        towerData = sim$towerMonthlyFlux,
-        BiomeBGCData = sim$monthlyAverages,
-        timescale = "month"
-      ) |> na.omit()
-      
-      # summarize the fit
-      resid <- monthComparison$BGC_GPP - monthComparison$tower_GPP
-      
-      sim$validationSummary <- rbind(
-        sim$validationSummary,
-        data.frame(
-          estimate = "GPP",
+    compareNEE = {
+      if("daily_nee" %in% names(sim$dailyOutput)){
+        #1. Evaluate daily predictions
+        dayComparison <- mergeData(
+          towerData = sim$towerDailyFlux,
+          BiomeBGCData = sim$dailyOutput,
+          timescale = "day",
+          outputVar = "NEE"
+        ) |> na.omit()
+        
+        # summarize the fit
+        resid <- dayComparison$BBGC - dayComparison$fluxTower
+        
+        sim$validationSummary <- data.frame(
+          estimate = "NEE",
           unit = "gc/m2/day",
+          timescale = "daily",
+          towerMean = mean(dayComparison$fluxTower),
+          BGCMean = mean(dayComparison$BBGC),
+          MAE = mean(abs(resid)),
+          RMSE = sqrt(mean(resid^2)),
+          R2 = cor(dayComparison$BBGC, dayComparison$fluxTower) ^ 2,
+          Bias = mean(resid),
+          Bias_perc = mean(resid)/mean(dayComparison$fluxTower) * 100
+        )
+        
+        #2. Evaluate monthly-level predictions
+        monthComparison <- mergeData(
+          towerData = sim$towerMonthlyFlux,
+          BiomeBGCData = sim$monthlyAverages,
           timescale = "month",
-          towerMean = mean(monthComparison$tower_GPP),
-          BGCMean = mean(monthComparison$BGC_GPP),
+          outputVar = "NEE"
+        ) |> na.omit()
+        
+        # summarize the fit
+        resid <- monthComparison$BBGC - monthComparison$fluxTower
+        
+        sim$validationSummary <- rbind(
+          sim$validationSummary,
+          data.frame(
+            estimate = "NEE",
+            unit = "gc/m2/day",
+            timescale = "month",
+            towerMean = mean(monthComparison$fluxTower),
+            BGCMean = mean(monthComparison$BBGC),
+            MAE = mean(abs(resid)),
+            RMSE = sqrt(mean(resid^2)),
+            R2 = cor(monthComparison$BBGC, monthComparison$fluxTower) ^ 2,
+            Bias = mean(resid),
+            Bias_perc = mean(resid)/mean(monthComparison$fluxTower)
+          )
+        )
+        
+        #3. Evaluate year-level predictions
+        yearComparison <- mergeData(
+          towerData = sim$towerAnnualFlux,
+          BiomeBGCData = sim$annualAverages,
+          timescale = "year",
+          outputVar = "NEE"
+        ) |> na.omit()
+        
+        # summarize the fit
+        resid <- yearComparison$BBGC - yearComparison$fluxTower
+        
+        sim$validationSummary <- rbind(
+          sim$validationSummary,
+          data.frame(
+            estimate = "NEE",
+            unit = "gc/m2/day",
+            timescale = "year",
+            towerMean = mean(yearComparison$fluxTower),
+            BGCMean = mean(yearComparison$BBGC),
+            MAE = mean(abs(resid)),
+            RMSE = sqrt(mean(resid^2)),
+            R2 = cor(yearComparison$BBGC, yearComparison$fluxTower) ^ 2,
+            Bias = mean(resid),
+            Bias_perc = mean(resid)/mean(yearComparison$fluxTower) * 100
+          )
+        )
+      } else {
+        
+        sim$validationSummary <- data.frame()
+        message("Net ecosystem exchange is not amongst the chosen Biome-BGC output, skipped.")
+        
+      }
+      
+    },
+    compareRECO = {
+      if(all(c("daily_mr", "daily_gr", "daily_hr") %in% names(sim$dailyOutput))){
+        #1. Evaluate daily predictions
+        dayComparison <- mergeData(
+          towerData = sim$towerDailyFlux,
+          BiomeBGCData = sim$dailyOutput,
+          timescale = "day",
+          outputVar = "RECO"
+        ) |> na.omit()
+        
+        # summarize the fit
+        resid <- dayComparison$BBGC - dayComparison$fluxTower
+        
+        REcoValidationSummary <- data.frame(
+          estimate = "RECO",
+          unit = "gc/m2/day",
+          timescale = "daily",
+          towerMean = mean(dayComparison$fluxTower),
+          BGCMean = mean(dayComparison$BBGC),
           MAE = mean(abs(resid)),
           RMSE = sqrt(mean(resid^2)),
-          R2 = cor(monthComparison$BGC_GPP, monthComparison$tower_GPP) ^ 2,
+          R2 = cor(dayComparison$BBGC, dayComparison$fluxTower) ^ 2,
           Bias = mean(resid),
-          Bias_perc = mean(resid)/mean(monthComparison$tower_GPP)
+          Bias_perc = mean(resid)/mean(dayComparison$fluxTower) * 100
         )
-      )
+        
+        #2. Evaluate monthly-level predictions
+        monthComparison <- mergeData(
+          towerData = sim$towerMonthlyFlux,
+          BiomeBGCData = sim$monthlyAverages,
+          timescale = "month",
+          outputVar = "RECO"
+        ) |> na.omit()
+        
+        # summarize the fit
+        resid <- monthComparison$BBGC - monthComparison$fluxTower
+        
+        REcoValidationSummary <- rbind(
+          REcoValidationSummary,
+          data.frame(
+            estimate = "RECO",
+            unit = "gc/m2/day",
+            timescale = "month",
+            towerMean = mean(monthComparison$fluxTower),
+            BGCMean = mean(monthComparison$BBGC),
+            MAE = mean(abs(resid)),
+            RMSE = sqrt(mean(resid^2)),
+            R2 = cor(monthComparison$BBGC, monthComparison$fluxTower) ^ 2,
+            Bias = mean(resid),
+            Bias_perc = mean(resid)/mean(monthComparison$fluxTower)
+          )
+        )
+        
+        #3. Evaluate year-level predictions
+        yearComparison <- mergeData(
+          towerData = sim$towerAnnualFlux,
+          BiomeBGCData = sim$annualAverages,
+          timescale = "year",
+          outputVar = "RECO"
+        ) |> na.omit()
+        
+        # summarize the fit
+        resid <- yearComparison$BBGC - yearComparison$fluxTower
+        
+        REcoValidationSummary <- rbind(
+          REcoValidationSummary,
+          data.frame(
+            estimate = "RECO",
+            unit = "gc/m2/day",
+            timescale = "year",
+            towerMean = mean(yearComparison$fluxTower),
+            BGCMean = mean(yearComparison$BBGC),
+            MAE = mean(abs(resid)),
+            RMSE = sqrt(mean(resid^2)),
+            R2 = cor(yearComparison$BBGC, yearComparison$fluxTower) ^ 2,
+            Bias = mean(resid),
+            Bias_perc = mean(resid)/mean(yearComparison$fluxTower) * 100
+          )
+        )
+        
+        sim$validationSummary <- rbind(sim$validationSummary, REcoValidationSummary)
+      } else {
+        
+        message("One or more respiration estimates is not amongst the chosen Biome-BGC output, skipped.")
+        
+      }
       
-      #3. Evaluate year-level predictions
-      yearComparison <- mergeGPPdata(
-        towerData = sim$towerAnnualFlux,
-        BiomeBGCData = sim$annualAverages,
-        timescale = "year"
-      ) |> na.omit()
-      
-      # summarize the fit
-      resid <- yearComparison$BGC_GPP - yearComparison$tower_GPP
-      
-      sim$validationSummary <- rbind(
-        sim$validationSummary,
-        data.frame(
+    }, 
+    compareGPP = {
+      if("daily_gpp" %in% names(sim$dailyOutput)){
+        #1. Evaluate daily predictions
+        dayComparison <- mergeData(
+          towerData = sim$towerDailyFlux,
+          BiomeBGCData = sim$dailyOutput,
+          timescale = "day",
+          outputVar = "GPP"
+        ) |> na.omit()
+        
+        # summarize the fit
+        resid <- dayComparison$BBGC - dayComparison$fluxTower
+        
+        gppValidationSummary <- data.frame(
           estimate = "GPP",
           unit = "gc/m2/day",
-          timescale = "year",
-          towerMean = mean(yearComparison$tower_GPP),
-          BGCMean = mean(yearComparison$BGC_GPP),
+          timescale = "daily",
+          towerMean = mean(dayComparison$fluxTower),
+          BGCMean = mean(dayComparison$BBGC),
           MAE = mean(abs(resid)),
           RMSE = sqrt(mean(resid^2)),
-          R2 = cor(yearComparison$BGC_GPP, yearComparison$tower_GPP) ^ 2,
+          R2 = cor(dayComparison$BBGC, dayComparison$fluxTower) ^ 2,
           Bias = mean(resid),
-          Bias_perc = mean(resid)/mean(yearComparison$tower_GPP) * 100
+          Bias_perc = mean(resid)/mean(dayComparison$fluxTower) * 100
         )
-      )
+        
+        #2. Evaluate monthly-level predictions
+        monthComparison <- mergeData(
+          towerData = sim$towerMonthlyFlux,
+          BiomeBGCData = sim$monthlyAverages,
+          timescale = "month",
+          outputVar = "GPP"
+        ) |> na.omit()
+        
+        # summarize the fit
+        resid <- monthComparison$BBGC - monthComparison$fluxTower
+        
+        gppValidationSummary <- rbind(
+          gppValidationSummary,
+          data.frame(
+            estimate = "GPP",
+            unit = "gc/m2/day",
+            timescale = "month",
+            towerMean = mean(monthComparison$fluxTower),
+            BGCMean = mean(monthComparison$BBGC),
+            MAE = mean(abs(resid)),
+            RMSE = sqrt(mean(resid^2)),
+            R2 = cor(monthComparison$BBGC, monthComparison$fluxTower) ^ 2,
+            Bias = mean(resid),
+            Bias_perc = mean(resid)/mean(monthComparison$fluxTower)
+          )
+        )
+        
+        #3. Evaluate year-level predictions
+        yearComparison <- mergeData(
+          towerData = sim$towerAnnualFlux,
+          BiomeBGCData = sim$annualAverages,
+          timescale = "year",
+          outputVar = "GPP"
+        ) |> na.omit()
+        
+        # summarize the fit
+        resid <- yearComparison$BBGC - yearComparison$fluxTower
+        
+        gppValidationSummary <- rbind(
+          gppValidationSummary,
+          data.frame(
+            estimate = "GPP",
+            unit = "gc/m2/day",
+            timescale = "year",
+            towerMean = mean(yearComparison$fluxTower),
+            BGCMean = mean(yearComparison$BBGC),
+            MAE = mean(abs(resid)),
+            RMSE = sqrt(mean(resid^2)),
+            R2 = cor(yearComparison$BBGC, yearComparison$fluxTower) ^ 2,
+            Bias = mean(resid),
+            Bias_perc = mean(resid)/mean(yearComparison$fluxTower) * 100
+          )
+        )
+        
+        sim$validationSummary <- rbind(sim$validationSummary, gppValidationSummary)
+      } else {
+        
+        message("GPP is not amongst the chosen Biome-BGC output, skipped.")
+        
+      }
       
     },
     
@@ -274,8 +466,8 @@ dailyGPPtimeseries <- function(gpp){
   dt <- copy(gpp)
   dt[, date := as.Date(paste0(year, day), format = "%Y%j")]
   ggplot(data = dt) +
-    geom_line(aes(x = date, y = BGC_GPP, col = "Biome-BGC")) +
-    geom_line(aes(x = date, y = tower_GPP, col = "EC tower")) +
+    geom_line(aes(x = date, y = BBGC, col = "Biome-BGC")) +
+    geom_line(aes(x = date, y = fluxTower, col = "EC tower")) +
     scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
     labs(x = "Time", y = "GPP (gC/m^2/day)") +
     scale_x_date(date_breaks = "year", date_labels = "%Y") +
@@ -286,8 +478,8 @@ monthlyGPPtimeseries <- function(gpp){
   dt <- copy(gpp)
   dt[, date := as.Date(paste0(year, formatC(month, digits = 1, flag = "0"), "01"), format = "%Y%m%d")]
   ggplot(data = dt) +
-    geom_line(aes(x = date, y = BGC_GPP, col = "Biome-BGC")) +
-    geom_line(aes(x = date, y = tower_GPP, col = "EC tower")) +
+    geom_line(aes(x = date, y = BBGC, col = "Biome-BGC")) +
+    geom_line(aes(x = date, y = fluxTower, col = "EC tower")) +
     scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
     labs(x = "Time", y = "GPP (gC/m^2/day)") +
     scale_x_date(date_breaks = "year", date_labels = "%Y") +
@@ -295,10 +487,10 @@ monthlyGPPtimeseries <- function(gpp){
 }
 
 GPPplot <- function(gpp){
-  GPPlims <- range(c(gpp$BGC_GPP, gpp$tower_GPP), na.rm = T)
+  GPPlims <- range(c(gpp$BBGC, gpp$fluxTower), na.rm = T)
   GPPlims <- c(floor(GPPlims[1]), ceiling(GPPlims[2]))
   ggplot(data = gpp) +
-    geom_point(aes(x = tower_GPP, y = BGC_GPP), alpha = 0.5) +
+    geom_point(aes(x = fluxTower, y = BBGC), alpha = 0.5) +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
     scale_x_continuous(expand = c(0, 0), limits = GPPlims) + 
     scale_y_continuous(expand = c(0, 0), limits = GPPlims)  +
@@ -308,8 +500,8 @@ GPPplot <- function(gpp){
 
 annualGPPplot <- function(gpp){
   ggplot(gpp) +
-    geom_pointrange(aes(x = as.factor(year), y = tower_GPP, ymin = tower_GPP_min, ymax = tower_GPP_max, col = "EC tower"), position = position_nudge(x = -0.1)) +
-    geom_point(aes(x = as.factor(year), y = BGC_GPP, col = "Biome-BGC"), position = position_nudge(x = 0.1)) +
+    geom_pointrange(aes(x = as.factor(year), y = fluxTower, ymin = fluxTower_min, ymax = fluxTower_max, col = "EC tower"), position = position_nudge(x = -0.1)) +
+    geom_point(aes(x = as.factor(year), y = BBGC, col = "Biome-BGC"), position = position_nudge(x = 0.1)) +
     scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
     labs(x = "Year", y = "GPP (gC/m^2/yr)") +
     theme_classic()
