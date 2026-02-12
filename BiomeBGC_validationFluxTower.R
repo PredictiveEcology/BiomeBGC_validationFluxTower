@@ -108,74 +108,85 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, end(sim), "BiomeBGC_validationFluxTower", "save", eventPriority = 12)
     },
     plot = {
-      figPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower")
-      #1.  Plot comparing daily GPP
-      plot_dt <-  mergeData(
-        towerData = sim$towerDailyFlux,
-        BiomeBGCData = sim$dailyOutput,
-        timescale = "day",
-        outputVar = "GPP"
-      )
-      
-      Plots(
-        plot_dt,
-        fn = GPPplot,
-        filename = "dailyGPP",
-        types = "png",
-        path = figPath,
-        ggsaveArgs = list(width = 7, height = 7, units = "in", dpi = 300)
-      )
-      Plots(
-        plot_dt,
-        fn = dailyGPPtimeseries,
-        filename = "dailyGPPtimeseries",
-        types = "png",
-        path = figPath,
-        ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
-      )
-      
-      #2.  Plot comparing monthly GPP
-      plot_dt <- mergeData(
-        towerData = sim$towerMonthlyFlux,
-        BiomeBGCData = sim$monthlyAverages,
-        timescale = "month",
-        outputVar = "GPP"
-      )
-      
-      Plots(
-        plot_dt,
-        fn = GPPplot,
-        filename = "monthlyGPP",
-        types = "png",
-        path = figPath,
-        ggsaveArgs = list(width = 7, height = 7, units = "in", dpi = 300)
-      )
-      Plots(
-        plot_dt,
-        fn = monthlyGPPtimeseries,
-        filename = "monthlyGPPtimeseries",
-        types = "png",
-        path = figPath,
-        ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
-      )
-      
-      # 3. Annual GPP plot
-      plot_dt <- mergeData(
-        towerData = sim$towerAnnualFlux,
-        BiomeBGCData = sim$annualAverages,
-        timescale = "year",
-        confInt = 95,
-        outputVar = "GPP"
-      )
-      Plots(
-        plot_dt,
-        fn = annualGPPplot,
-        filename = "annualGPP",
-        types = "png",
-        path = figPath,
-        ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
-      )
-      
+      # Plot for the three estimates
+      for (outputVar in c("NEE", "RECO", "GPP")){
+        if (outputVar %in% sim$validationSummary[,"estimate"]){
+          # save figures in different folder
+          figPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower", outputVar)
+          
+          #1.  Plot comparing daily GPP
+          plot_dt <-  mergeData(
+            towerData = sim$towerDailyFlux,
+            BiomeBGCData = sim$dailyOutput,
+            timescale = "day",
+            outputVar = outputVar
+          )
+          
+          Plots(
+            plot_dt,
+            fn = comparisonBiplot,
+            outputVar = outputVar,
+            filename = paste0("daily", outputVar),
+            types = "png",
+            path = figPath,
+            ggsaveArgs = list(width = 7, height = 7, units = "in", dpi = 300)
+          )
+          Plots(
+            plot_dt,
+            fn = dailyTimeseries,
+            outputVar = outputVar,
+            filename = paste0("daily", outputVar, "timeseries"),
+            types = "png",
+            path = figPath,
+            ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
+          )
+          
+          #2.  Plot comparing monthly GPP
+          plot_dt <- mergeData(
+            towerData = sim$towerMonthlyFlux,
+            BiomeBGCData = sim$monthlyAverages,
+            timescale = "month",
+            outputVar = outputVar
+          )
+          
+          Plots(
+            plot_dt,
+            fn = comparisonBiplot,
+            outputVar = outputVar,
+            filename = paste0("monthly", outputVar),
+            types = "png",
+            path = figPath,
+            ggsaveArgs = list(width = 7, height = 7, units = "in", dpi = 300)
+          )
+          Plots(
+            plot_dt,
+            fn = monthlyTimeseries,
+            outputVar = outputVar,
+            filename = paste0("monthly", outputVar, "timeseries"),
+            types = "png",
+            path = figPath,
+            ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
+          )
+          
+          # 3. Annual GPP plot
+          plot_dt <- mergeData(
+            towerData = sim$towerAnnualFlux,
+            BiomeBGCData = sim$annualAverages,
+            timescale = "year",
+            confInt = 95,
+            outputVar = outputVar
+          )
+          Plots(
+            plot_dt,
+            fn = annualPlot,
+            outputVar = outputVar,
+            filename = paste0("annual", outputVar),
+            types = "png",
+            path = figPath,
+            ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
+          )
+        }
+      }
     },
     save = {
       outPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower")
@@ -462,48 +473,48 @@ Save <- function(sim) {
 }
 
 
-dailyGPPtimeseries <- function(gpp){
-  dt <- copy(gpp)
-  dt[, date := as.Date(paste0(year, day), format = "%Y%j")]
-  ggplot(data = dt) +
+dailyTimeseries <- function(df, outputVar){
+  plot_df <- copy(df)
+  plot_df[, date := as.Date(paste0(year, day), format = "%Y%j")]
+  ggplot(data = plot_df) +
     geom_line(aes(x = date, y = BBGC, col = "Biome-BGC")) +
     geom_line(aes(x = date, y = fluxTower, col = "EC tower")) +
     scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
-    labs(x = "Time", y = "GPP (gC/m^2/day)") +
+    labs(x = "Time", y = paste(outputVar, "(gC/m^2/day)")) +
     scale_x_date(date_breaks = "year", date_labels = "%Y") +
     theme_classic()
 }
 
-monthlyGPPtimeseries <- function(gpp){
-  dt <- copy(gpp)
-  dt[, date := as.Date(paste0(year, formatC(month, digits = 1, flag = "0"), "01"), format = "%Y%m%d")]
-  ggplot(data = dt) +
+monthlyTimeseries <- function(df, outputVar){
+  plot_df <- copy(df)
+  plot_df[, date := as.Date(paste0(year, formatC(month, digits = 1, flag = "0"), "01"), format = "%Y%m%d")]
+  ggplot(data = plot_df) +
     geom_line(aes(x = date, y = BBGC, col = "Biome-BGC")) +
     geom_line(aes(x = date, y = fluxTower, col = "EC tower")) +
     scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
-    labs(x = "Time", y = "GPP (gC/m^2/day)") +
+    labs(x = "Time", y = paste(outputVar, "(gC/m^2/day)")) +
     scale_x_date(date_breaks = "year", date_labels = "%Y") +
     theme_classic()
 }
 
-GPPplot <- function(gpp){
-  GPPlims <- range(c(gpp$BBGC, gpp$fluxTower), na.rm = T)
-  GPPlims <- c(floor(GPPlims[1]), ceiling(GPPlims[2]))
-  ggplot(data = gpp) +
+comparisonBiplot <- function(df, outputVar){
+  axis_lims <- range(c(df$BBGC, df$fluxTower), na.rm = T)
+  axis_lims <- c(floor(axis_lims[1]), ceiling(axis_lims[2]))
+  ggplot(data = df) +
     geom_point(aes(x = fluxTower, y = BBGC), alpha = 0.5) +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
-    scale_x_continuous(expand = c(0, 0), limits = GPPlims) + 
-    scale_y_continuous(expand = c(0, 0), limits = GPPlims)  +
-    labs(x = "EC tower GPP (gC/m^2/day)", y = "Biome-BGC (gC/m^2/day)") +
+    scale_x_continuous(expand = c(0, 0), limits = axis_lims) + 
+    scale_y_continuous(expand = c(0, 0), limits = axis_lims)  +
+    labs(x = paste("EC tower", outputVar, "(gC/m^2/day)"), y = paste("Biome-BGC", outputVar, "(gC/m^2/day)")) +
     theme_classic()
 }
 
-annualGPPplot <- function(gpp){
-  ggplot(gpp) +
+annualPlot <- function(df, outputVar){
+  ggplot(df) +
     geom_pointrange(aes(x = as.factor(year), y = fluxTower, ymin = fluxTower_min, ymax = fluxTower_max, col = "EC tower"), position = position_nudge(x = -0.1)) +
     geom_point(aes(x = as.factor(year), y = BBGC, col = "Biome-BGC"), position = position_nudge(x = 0.1)) +
     scale_color_manual(name = NULL, values = c("Biome-BGC" = "darkblue", "EC tower" = "red")) +
-    labs(x = "Year", y = "GPP (gC/m^2/yr)") +
+    labs(x = "Year", y = paste(outputVar, "(gC/m^2/yr)")) +
     theme_classic()
 }
 
