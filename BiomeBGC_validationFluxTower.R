@@ -328,7 +328,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             RMSE = sqrt(mean(resid^2)),
             R2 = cor(monthComparison$BBGC, monthComparison$fluxTower) ^ 2,
             Bias = mean(resid),
-            Bias_perc = mean(resid)/mean(monthComparison$fluxTower)
+            Bias_perc = mean(resid)/mean(monthComparison$fluxTower) * 100
           )
         )
         
@@ -416,7 +416,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             RMSE = sqrt(mean(resid^2)),
             R2 = cor(monthComparison$BBGC, monthComparison$fluxTower) ^ 2,
             Bias = mean(resid),
-            Bias_perc = mean(resid)/mean(monthComparison$fluxTower)
+            Bias_perc = mean(resid)/mean(monthComparison$fluxTower) * 100
           )
         )
         
