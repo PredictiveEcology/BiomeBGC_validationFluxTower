@@ -23,7 +23,7 @@ defineModule(sim, list(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter("resolution", "numeric", 250, NA, NA,
                     "Defines the resolution for the raster created for the study site."),
-    defineParameter("targetCRS", "character", "+proj=lcc +lat_0=0 +lon_0=-95 +lat_1=49 +lat_2=77 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs", NA, NA,
+    defineParameter("targetCRS", "character", "+proj=lcc +lat_0=0 +lon_0=-95 +lat_1=49 +lat_2=77 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs", NA, NA,
                     "Defines the resolution for the raster created for the study site."),
     defineParameter(".plots", "character", "screen", NA, NA,
                     "Used by Plots function, which can be optionally used here"),
@@ -241,7 +241,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             RMSE = sqrt(mean(resid^2)),
             R2 = cor(monthComparison$BBGC, monthComparison$fluxTower) ^ 2,
             Bias = mean(resid),
-            Bias_perc = mean(resid)/mean(monthComparison$fluxTower)
+            Bias_perc = mean(resid)/mean(monthComparison$fluxTower) * 100
           )
         )
         
@@ -562,7 +562,7 @@ Event2 <- function(sim) {
     lat <- sim$towerCoordinates["lat"] |> as.numeric()
     lon <- sim$towerCoordinates["lon"] |> as.numeric()
     sim$studyArea <- vect(data.frame(lon = lon, lat = lat), geom=c("lon", "lat"), crs="EPSG:4326")
-    sim$studyArea <- postProcessTo(sim$studyArea, projectTo =  P(sim)$targetCRS)
+    sim$studyArea <- postProcessTo(sim$studyArea, projectTo = P(sim)$targetCRS)
     
   }
   
