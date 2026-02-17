@@ -6,7 +6,7 @@ mergeData <- function(towerData, BiomeBGCData, timescale, outputVar, NEEpartitio
   # format towerData
   towerData <- towerData[, colToKeep]
   towerData[towerData %in% NAvalues] <- NA
-  if (0 %in% NAvalues){
+  if (0 %in% NAvalues & outputVar != "NEE"){
     towerData[towerData <= 0] <- NA
   }
   
@@ -70,7 +70,7 @@ mergeDailyData <- function(towerData, BiomeBGCData, outputVar, colToKeep){
   )
   
   if (outputVar == "NEE"){
-    BBGCdata <- BiomeBGCData[, .(year, timestep, day, BBGC = daily_nee)]
+    BBGCdata <- BiomeBGCData[, .(year, timestep, day, BBGC = -daily_nep)]
   } else if (outputVar == "RECO"){
     BBGCdata <- BiomeBGCData[, .(year, timestep, day, BBGC = daily_mr + daily_gr + daily_hr)]
   } else {
@@ -100,7 +100,7 @@ mergeMonthlyData <- function(towerData, BiomeBGCData, outputVar, colToKeep){
   )
   
   if (outputVar == "NEE"){
-    BBGCdata <- BiomeBGCData[, .(year, month, BBGC = daily_nee)]
+    BBGCdata <- BiomeBGCData[, .(year, month, BBGC = -daily_nep)]
   } else if (outputVar == "RECO"){
     BBGCdata <- BiomeBGCData[, .(year, month, BBGC = daily_mr + daily_gr + daily_hr)]
   } else {
@@ -133,7 +133,7 @@ mergeAnnualData <- function(towerData, BiomeBGCData, outputVar, colToKeep, confI
   }
   
   if (outputVar == "NEE") {
-    BBGCdata <- BiomeBGCData[, .(year, BBGC = daily_nee)]
+    BBGCdata <- BiomeBGCData[, .(year, BBGC = -daily_nep)]
   } else if (outputVar == "RECO") {
     BBGCdata <- BiomeBGCData[, .(year, BBGC = daily_mr + daily_gr + daily_hr)]
   } else {
