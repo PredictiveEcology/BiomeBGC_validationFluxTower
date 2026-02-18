@@ -1,14 +1,17 @@
 mergeData <- function(towerData, BiomeBGCData, timescale, outputVar, NEEpartitioningMethod = "DT", ustarThresMethod = "VUT", centralValue = "REF", confInt = NA, NAvalues = c(-9999, 0)){
-  
   # Define which columns of towerData we need
   colToKeep <- determineColumns(outputVar, NEEpartitioningMethod, ustarThresMethod, centralValue, confInt)
   
-  # format towerData
-  towerData <- towerData[, colToKeep]
-  towerData[towerData %in% NAvalues] <- NA
-  if (0 %in% NAvalues & outputVar != "NEE"){
-    towerData[towerData <= 0] <- NA
-  }
+  # Remove unsuitable entries,
+  QC_column <- paste("NEE", ustarThresMethod, centralValue, "QC", sep = "_")
+  towerData <- towerData[, c(colToKeep, QC_column)]
+  
+  ## remove data that was gap-filled at more than 50%
+  highGapFilled <- towerData[,QC_column] < 0.5
+  towerData[highGapFilled, colToKeep[-1]] <- -9999
+  
+  ## NA, usually -9999
+  towerData[towerData <= -9990] <- NA
   
   if (timescale == "day"){
     
@@ -49,7 +52,6 @@ determineColumns <- function(outputVar, NEEpartitioningMethod, ustarThresMethod,
 }
 
 mergeDailyData <- function(towerData, BiomeBGCData, outputVar, colToKeep){
-  
   # format dates
   dates <- as.Date(as.character(towerData[,"TIMESTAMP"]), format = "%Y%m%d")
   
@@ -59,13 +61,16 @@ mergeDailyData <- function(towerData, BiomeBGCData, outputVar, colToKeep){
   dates <- dates[!feb29]
   
   # Prepare tower data for merging
-  years <- format(dates, "%Y")
-  nyear <- length(unique(years))
+  years <- as.numeric(format(dates, "%Y"))
+  days <- as.numeric(format(dates, "%j"))
+  # -1 for days after Feb 29th on leap years
+  julianDaysToRemoveOne <- (years %% 4 == 0 & years %% 400 != 0) & days > 60
+  days[julianDaysToRemoveOne] <- days[julianDaysToRemoveOne] - 1
   
   # Create data.table
   towerData <- data.table(
     year = as.integer(years),
-    day = rep(c(1:365), nyear),
+    day = as.integer(days),
     fluxTower = towerData[, colToKeep[2]]
   )
   
@@ -92,10 +97,10 @@ mergeMonthlyData <- function(towerData, BiomeBGCData, outputVar, colToKeep){
   
   # Prepare tower data for merging
   years <- format(dates, "%Y")
-  nyear <- length(unique(years))
+  months <- format(dates, "%m")
   towerData <- data.table(
     year = as.integer(years),
-    month = rep(c(1:12), nyear),
+    month = as.integer(months),
     fluxTower = towerData[, colToKeep[2]]
   )
   

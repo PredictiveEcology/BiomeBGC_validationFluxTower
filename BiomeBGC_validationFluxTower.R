@@ -260,7 +260,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           sim$validationSummary,
           data.frame(
             estimate = "NEE",
-            unit = "gc/m2/day",
+            unit = "gc/m2/yr",
             timescale = "year",
             towerMean = mean(yearComparison$fluxTower),
             BGCMean = mean(yearComparison$BBGC),
@@ -347,7 +347,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           REcoValidationSummary,
           data.frame(
             estimate = "RECO",
-            unit = "gc/m2/day",
+            unit = "gc/m2/yr",
             timescale = "year",
             towerMean = mean(yearComparison$fluxTower),
             BGCMean = mean(yearComparison$BBGC),
@@ -435,7 +435,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           gppValidationSummary,
           data.frame(
             estimate = "GPP",
-            unit = "gc/m2/day",
+            unit = "gc/m2/yr",
             timescale = "year",
             towerMean = mean(yearComparison$fluxTower),
             BGCMean = mean(yearComparison$BBGC),
