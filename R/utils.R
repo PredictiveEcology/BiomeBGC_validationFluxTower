@@ -4,6 +4,14 @@ mergeData <- function(towerData, BiomeBGCData, timescale, outputVar, NEEpartitio
   
   # Remove unsuitable entries,
   QC_column <- paste("NEE", ustarThresMethod, centralValue, "QC", sep = "_")
+  
+  # Sometimes variable ustar threshold (VUT) method is not available, if so, use the CUT
+  if(QC_column %notin% colnames(towerData)){
+    ustarThresMethod <- ifelse(ustarThresMethod == "VUT", "CUT", "VUT")
+    colToKeep <- determineColumns(outputVar, NEEpartitioningMethod, ustarThresMethod, centralValue, confInt)
+    QC_column <- paste("NEE", ustarThresMethod, centralValue, "QC", sep = "_")
+  }
+  
   towerData <- towerData[, c(colToKeep, QC_column)]
   
   ## remove data that was gap-filled at more than 50%
