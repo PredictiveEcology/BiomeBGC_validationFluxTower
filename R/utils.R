@@ -1,4 +1,7 @@
 mergeData <- function(towerData, BiomeBGCData, timescale, outputVar, NEEpartitioningMethod = "DT", ustarThresMethod = "VUT", centralValue = "REF", confInt = NA, NAvalues = c(-9999, 0)){
+  # Make sure the input is a data frame
+  towerData <- as.data.frame(towerData)
+
   # Define which columns of towerData we need
   colToKeep <- determineColumns(outputVar, NEEpartitioningMethod, ustarThresMethod, centralValue, confInt)
   
@@ -34,6 +37,9 @@ mergeData <- function(towerData, BiomeBGCData, timescale, outputVar, NEEpartitio
     out <- mergeAnnualData(towerData, BiomeBGCData, outputVar, colToKeep, confInt)
     
   }
+  
+  # Always drop rows with missing tower or BiomeBGC values here.
+  out <- na.omit(out)
   
   return(out)
   
@@ -153,7 +159,7 @@ mergeAnnualData <- function(towerData, BiomeBGCData, outputVar, colToKeep, confI
     BBGCdata <- BiomeBGCData[, .(year, BBGC = daily_gpp)]
   }
   
-  out <- merge(towerData, BBGCdata) |> na.omit()
+  out <- merge(towerData, BBGCdata)
   
   # put in the same units (gC/m2/yr) and rename columns
   out <- out[, BBGC := BBGC * 1000 * 365]
@@ -165,4 +171,12 @@ mergeAnnualData <- function(towerData, BiomeBGCData, outputVar, colToKeep, confI
   }
   
   return(out)
+}
+
+
+hasBiomeBGCColumns <- function(requiredCols, ...) {
+  # Checks that every one of requiredCols is present in each supplied BiomeBGC-side
+  # data.frame (e.g. dailyOutput, monthlyAverages, annualAverages). 
+  datasets <- list(...)
+  all(vapply(datasets, function(d) all(requiredCols %in% names(d)), logical(1)))
 }
