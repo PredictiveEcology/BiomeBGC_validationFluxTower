@@ -193,7 +193,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       fwrite(sim$validationSummary, file.path(outPath, "validationSummary.csv"))
     },
     compareNEE = {
-      if("daily_nee" %in% names(sim$dailyOutput)){
+      if("daily_nep" %in% names(sim$dailyOutput)){
         #1. Evaluate daily predictions
         dayComparison <- mergeData(
           towerData = sim$towerDailyFlux,
