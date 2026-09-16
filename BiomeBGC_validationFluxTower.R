@@ -215,7 +215,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           RMSE = sqrt(mean(resid^2)),
           R2 = cor(dayComparison$BBGC, dayComparison$fluxTower) ^ 2,
           Bias = mean(resid),
-          Bias_perc = mean(resid)/mean(dayComparison$fluxTower) * 100
+          Bias_perc = sum(resid)/sum(dayComparison$fluxTower) * 100
         )
         
         #2. Evaluate monthly-level predictions
@@ -241,7 +241,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             RMSE = sqrt(mean(resid^2)),
             R2 = cor(monthComparison$BBGC, monthComparison$fluxTower) ^ 2,
             Bias = mean(resid),
-            Bias_perc = mean(resid)/mean(monthComparison$fluxTower) * 100
+            Bias_perc = sum(resid)/sum(monthComparison$fluxTower) * 100
           )
         )
         
@@ -268,7 +268,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             RMSE = sqrt(mean(resid^2)),
             R2 = cor(yearComparison$BBGC, yearComparison$fluxTower) ^ 2,
             Bias = mean(resid),
-            Bias_perc = mean(resid)/mean(yearComparison$fluxTower) * 100
+            Bias_perc = sum(resid)/sum(yearComparison$fluxTower) * 100
           )
         )
       } else {
@@ -302,7 +302,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           RMSE = sqrt(mean(resid^2)),
           R2 = cor(dayComparison$BBGC, dayComparison$fluxTower) ^ 2,
           Bias = mean(resid),
-          Bias_perc = mean(resid)/mean(dayComparison$fluxTower) * 100
+          Bias_perc = sum(resid)/sum(dayComparison$fluxTower) * 100
         )
         
         #2. Evaluate monthly-level predictions
@@ -328,7 +328,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             RMSE = sqrt(mean(resid^2)),
             R2 = cor(monthComparison$BBGC, monthComparison$fluxTower) ^ 2,
             Bias = mean(resid),
-            Bias_perc = mean(resid)/mean(monthComparison$fluxTower) * 100
+            Bias_perc = sum(resid)/sum(monthComparison$fluxTower) * 100
           )
         )
         
@@ -355,7 +355,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             RMSE = sqrt(mean(resid^2)),
             R2 = cor(yearComparison$BBGC, yearComparison$fluxTower) ^ 2,
             Bias = mean(resid),
-            Bias_perc = mean(resid)/mean(yearComparison$fluxTower) * 100
+            Bias_perc = sum(resid)/sum(yearComparison$fluxTower) * 100
           )
         )
         
@@ -390,7 +390,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           RMSE = sqrt(mean(resid^2)),
           R2 = cor(dayComparison$BBGC, dayComparison$fluxTower) ^ 2,
           Bias = mean(resid),
-          Bias_perc = mean(resid)/mean(dayComparison$fluxTower) * 100
+          Bias_perc = sum(resid)/sum(dayComparison$fluxTower) * 100
         )
         
         #2. Evaluate monthly-level predictions
@@ -416,7 +416,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             RMSE = sqrt(mean(resid^2)),
             R2 = cor(monthComparison$BBGC, monthComparison$fluxTower) ^ 2,
             Bias = mean(resid),
-            Bias_perc = mean(resid)/mean(monthComparison$fluxTower) * 100
+            Bias_perc = sum(resid)/sum(monthComparison$fluxTower) * 100
           )
         )
         
@@ -443,7 +443,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             RMSE = sqrt(mean(resid^2)),
             R2 = cor(yearComparison$BBGC, yearComparison$fluxTower) ^ 2,
             Bias = mean(resid),
-            Bias_perc = mean(resid)/mean(yearComparison$fluxTower) * 100
+            Bias_perc = sum(resid)/sum(yearComparison$fluxTower) * 100
           )
         )
         
