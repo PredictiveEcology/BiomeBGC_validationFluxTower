@@ -35,4 +35,4 @@ jobs:
       contents: write
     uses: PredictiveEcology/actions/.github/workflows/render-module-rmd.yaml@main
     with:
-      module: validationFluxTower
+      module: BiomeBGC_validationFluxTower
