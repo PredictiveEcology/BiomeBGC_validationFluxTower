@@ -193,14 +193,14 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       fwrite(sim$validationSummary, file.path(outPath, "validationSummary.csv"))
     },
     compareNEE = {
-      if("daily_nee" %in% names(sim$dailyOutput)){
+      if(hasBiomeBGCColumns("daily_nep", sim$dailyOutput, sim$monthlyAverages, sim$annualAverages)){
         #1. Evaluate daily predictions
         dayComparison <- mergeData(
           towerData = sim$towerDailyFlux,
           BiomeBGCData = sim$dailyOutput,
           timescale = "day",
           outputVar = "NEE"
-        ) |> na.omit()
+        )
         
         # summarize the fit
         resid <- dayComparison$BBGC - dayComparison$fluxTower
@@ -224,7 +224,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           BiomeBGCData = sim$monthlyAverages,
           timescale = "month",
           outputVar = "NEE"
-        ) |> na.omit()
+        )
         
         # summarize the fit
         resid <- monthComparison$BBGC - monthComparison$fluxTower
@@ -251,7 +251,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           BiomeBGCData = sim$annualAverages,
           timescale = "year",
           outputVar = "NEE"
-        ) |> na.omit()
+        )
         
         # summarize the fit
         resid <- yearComparison$BBGC - yearComparison$fluxTower
@@ -280,14 +280,14 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       
     },
     compareRECO = {
-      if(all(c("daily_mr", "daily_gr", "daily_hr") %in% names(sim$dailyOutput))){
+      if(hasBiomeBGCColumns(c("daily_mr", "daily_gr", "daily_hr"), sim$dailyOutput, sim$monthlyAverages, sim$annualAverages)){
         #1. Evaluate daily predictions
         dayComparison <- mergeData(
           towerData = sim$towerDailyFlux,
           BiomeBGCData = sim$dailyOutput,
           timescale = "day",
           outputVar = "RECO"
-        ) |> na.omit()
+        )
         
         # summarize the fit
         resid <- dayComparison$BBGC - dayComparison$fluxTower
@@ -311,7 +311,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           BiomeBGCData = sim$monthlyAverages,
           timescale = "month",
           outputVar = "RECO"
-        ) |> na.omit()
+        )
         
         # summarize the fit
         resid <- monthComparison$BBGC - monthComparison$fluxTower
@@ -338,7 +338,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           BiomeBGCData = sim$annualAverages,
           timescale = "year",
           outputVar = "RECO"
-        ) |> na.omit()
+        )
         
         # summarize the fit
         resid <- yearComparison$BBGC - yearComparison$fluxTower
@@ -368,14 +368,14 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
       
     }, 
     compareGPP = {
-      if("daily_gpp" %in% names(sim$dailyOutput)){
+      if(hasBiomeBGCColumns("daily_gpp", sim$dailyOutput, sim$monthlyAverages, sim$annualAverages)){
         #1. Evaluate daily predictions
         dayComparison <- mergeData(
           towerData = sim$towerDailyFlux,
           BiomeBGCData = sim$dailyOutput,
           timescale = "day",
           outputVar = "GPP"
-        ) |> na.omit()
+        )
         
         # summarize the fit
         resid <- dayComparison$BBGC - dayComparison$fluxTower
@@ -399,7 +399,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           BiomeBGCData = sim$monthlyAverages,
           timescale = "month",
           outputVar = "GPP"
-        ) |> na.omit()
+        )
         
         # summarize the fit
         resid <- monthComparison$BBGC - monthComparison$fluxTower
@@ -426,7 +426,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           BiomeBGCData = sim$annualAverages,
           timescale = "year",
           outputVar = "GPP"
-        ) |> na.omit()
+        )
         
         # summarize the fit
         resid <- yearComparison$BBGC - yearComparison$fluxTower
@@ -573,7 +573,7 @@ Event2 <- function(sim) {
     terra::crs(rtm) <-  P(sim)$targetCRS
     rtm[] <- 1
     
-    sim$rastertoMatch <- rtm
+    sim$rasterToMatch <- rtm
   }
   
   return(invisible(sim))
