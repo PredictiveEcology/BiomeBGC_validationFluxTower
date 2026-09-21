@@ -11,8 +11,6 @@
 #
 # Drafted with assistance from Claude (Posit Assistant).
 
-library(SpaDES.core)
-
 modulePath <- normalizePath(
   file.path(testthat::test_path(), "..", ".."),
   mustWork = TRUE
