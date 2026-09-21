@@ -18,7 +18,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("NEWS.md", "README.md", "BiomeBGC_validationFluxTower.Rmd"),
-  reqdPkgs = list("SpaDES.core (>= 3.0.4)", "ggplot2", "terra", "data.table", "reproducible"),
+  reqdPkgs = list("SpaDES.core (>= 3.0.4)", "ggplot2", "terra", "sf", "data.table", "reproducible"),
   parameters = bindrows(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter("resolution", "numeric", 250, NA, NA,
