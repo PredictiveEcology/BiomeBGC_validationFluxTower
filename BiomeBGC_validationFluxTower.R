@@ -9,8 +9,8 @@ defineModule(sim, list(
   description = "Compares Biome-BGC gross primary productivity predictions to Eddy covariance flux tower estimates.",
   keywords = "",
   authors = c(
-    person("Dominique", "Caron", email = "dominique.caron@nrcan-rncan.gc.ca", role = c("aut", "cre")),
-    person("Céline", "Boisvenue", email = "celine.boisvenue@nrcan-rncan.gc.ca", role = "ctb")
+    person("Céline", "Boisvenue", email = "celine.boisvenue@nrcan-rncan.gc.ca", role = c("cre", "ctb")
+    person("Dominique", "Caron", email = "dominique.caron@nrcan-rncan.gc.ca", role = c("aut")),
   ),
   childModules = character(0),
   version = list(BiomeBGC_validationFluxTower = "0.0.0.9000"),
@@ -47,46 +47,46 @@ defineModule(sim, list(
   inputObjects = bindrows(
     expectsInput("towerCoordinates", "vector",
                  desc = paste("Must be provided by the user.",
-                              "A named vector with the longitude and latitude of the EC tower.", 
+                              "A named vector with the longitude and latitude of the EC tower.",
                               "The names of the variables must be 'lon' and 'lat'.")
-    ), 
-    expectsInput("towerDailyFlux", "data.frame", 
+    ),
+    expectsInput("towerDailyFlux", "data.frame",
                  desc = paste("Must be provided by the user.",
                               "The daily data from the Eddy covariance flux tower.",
                               "A csv named 'XXX_XX-XXX_FLUXNET_FLUXMET_DD_XXXX-XXXX_XXX.csv'",
                               "is usually available when downloading flux tower data.")
     ),
-    expectsInput("towerMonthlyFlux", "data.frame", 
+    expectsInput("towerMonthlyFlux", "data.frame",
                  desc = paste("Must be provided by the user.",
                               "The monthly data from the Eddy covariance flux tower.",
                               "A csv named 'XXX_XX-XXX_FLUXNET_FLUXMET_MM_XXXX-XXXX_XXX.csv'",
                               "is usually available when downloading flux tower data.")
     ),
-    expectsInput("towerAnnualFlux", "data.frame", 
+    expectsInput("towerAnnualFlux", "data.frame",
                  desc =paste("Must be provided by the user.",
                              "The annual data from the Eddy covariance flux tower.",
                              "A csv named 'XXX_XX-XXX_FLUXNET_FLUXMET_YY_XXXX-XXXX_XXX.csv'",
                              "is usually available when downloading flux tower data.")
     ),
-    expectsInput("dailyOutput", "data.frame", 
+    expectsInput("dailyOutput", "data.frame",
                  desc = paste("The daily GPP predicted by Biome-BGC.",
                               "This is an output of the module BiomeBGC_core.")
     ),
-    expectsInput("monthlyAverages", "data.frame", 
+    expectsInput("monthlyAverages", "data.frame",
                  desc = paste("The GPP predicted by Biome-BGC averaged at the monthly resolution.",
                               "This is an output of the module BiomeBGC_core.")
     ),
-    expectsInput("annualAverages", "data.frame", 
+    expectsInput("annualAverages", "data.frame",
                  desc = paste("The GPP predicted by Biome-BGC averaged at the monthly resolution.",
                               "This is an output of the module BiomeBGC_core.")
     )
   ),
   outputObjects = bindrows(
-    createsOutput("studyArea", "SpatVector", 
+    createsOutput("studyArea", "SpatVector",
                   desc = "A point vector locating the Eddy covariance flux tower."),
-    createsOutput("rasterToMatch", "SpatVector", 
+    createsOutput("rasterToMatch", "SpatVector",
                   desc = "A 1 pixel raster."),
-    createsOutput("validationSummary", "data.frame", 
+    createsOutput("validationSummary", "data.frame",
                   desc = "A data frame with validation metrics.")
   )
 ))
@@ -95,7 +95,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
   switch(
     eventType,
     init = {
-      
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, end(sim), "BiomeBGC_validationFluxTower", "compareNEE")
       # schedule future event(s)
@@ -113,7 +113,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
         if (outputVar %in% sim$validationSummary[,"estimate"]){
           # save figures in different folder
           figPath <- file.path(outputPath(sim), "BiomeBGC_validationFluxTower", outputVar)
-          
+
           #1.  Plot comparing daily GPP
           plot_dt <-  mergeData(
             towerData = sim$towerDailyFlux,
@@ -121,7 +121,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             timescale = "day",
             outputVar = outputVar
           )
-          
+
           Plots(
             plot_dt,
             fn = comparisonBiplot,
@@ -140,7 +140,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             path = figPath,
             ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
           )
-          
+
           #2.  Plot comparing monthly GPP
           plot_dt <- mergeData(
             towerData = sim$towerMonthlyFlux,
@@ -148,7 +148,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             timescale = "month",
             outputVar = outputVar
           )
-          
+
           Plots(
             plot_dt,
             fn = comparisonBiplot,
@@ -167,7 +167,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             path = figPath,
             ggsaveArgs = list(width = 12, height = 7, units = "in", dpi = 300)
           )
-          
+
           # 3. Annual GPP plot
           plot_dt <- mergeData(
             towerData = sim$towerAnnualFlux,
@@ -201,10 +201,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           timescale = "day",
           outputVar = "NEE"
         )
-        
+
         # summarize the fit
         resid <- dayComparison$BBGC - dayComparison$fluxTower
-        
+
         sim$validationSummary <- data.frame(
           estimate = "NEE",
           unit = "gc/m2/day",
@@ -217,7 +217,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           Bias = mean(resid),
           Bias_perc = sum(resid)/sum(dayComparison$fluxTower) * 100
         )
-        
+
         #2. Evaluate monthly-level predictions
         monthComparison <- mergeData(
           towerData = sim$towerMonthlyFlux,
@@ -225,10 +225,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           timescale = "month",
           outputVar = "NEE"
         )
-        
+
         # summarize the fit
         resid <- monthComparison$BBGC - monthComparison$fluxTower
-        
+
         sim$validationSummary <- rbind(
           sim$validationSummary,
           data.frame(
@@ -244,7 +244,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             Bias_perc = sum(resid)/sum(monthComparison$fluxTower) * 100
           )
         )
-        
+
         #3. Evaluate year-level predictions
         yearComparison <- mergeData(
           towerData = sim$towerAnnualFlux,
@@ -252,10 +252,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           timescale = "year",
           outputVar = "NEE"
         )
-        
+
         # summarize the fit
         resid <- yearComparison$BBGC - yearComparison$fluxTower
-        
+
         sim$validationSummary <- rbind(
           sim$validationSummary,
           data.frame(
@@ -272,12 +272,12 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           )
         )
       } else {
-        
+
         sim$validationSummary <- data.frame()
         message("Net ecosystem exchange is not amongst the chosen Biome-BGC output, skipped.")
-        
+
       }
-      
+
     },
     compareRECO = {
       if(hasBiomeBGCColumns(c("daily_mr", "daily_gr", "daily_hr"), sim$dailyOutput, sim$monthlyAverages, sim$annualAverages)){
@@ -288,10 +288,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           timescale = "day",
           outputVar = "RECO"
         )
-        
+
         # summarize the fit
         resid <- dayComparison$BBGC - dayComparison$fluxTower
-        
+
         REcoValidationSummary <- data.frame(
           estimate = "RECO",
           unit = "gc/m2/day",
@@ -304,7 +304,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           Bias = mean(resid),
           Bias_perc = sum(resid)/sum(dayComparison$fluxTower) * 100
         )
-        
+
         #2. Evaluate monthly-level predictions
         monthComparison <- mergeData(
           towerData = sim$towerMonthlyFlux,
@@ -312,10 +312,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           timescale = "month",
           outputVar = "RECO"
         )
-        
+
         # summarize the fit
         resid <- monthComparison$BBGC - monthComparison$fluxTower
-        
+
         REcoValidationSummary <- rbind(
           REcoValidationSummary,
           data.frame(
@@ -331,7 +331,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             Bias_perc = sum(resid)/sum(monthComparison$fluxTower) * 100
           )
         )
-        
+
         #3. Evaluate year-level predictions
         yearComparison <- mergeData(
           towerData = sim$towerAnnualFlux,
@@ -339,10 +339,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           timescale = "year",
           outputVar = "RECO"
         )
-        
+
         # summarize the fit
         resid <- yearComparison$BBGC - yearComparison$fluxTower
-        
+
         REcoValidationSummary <- rbind(
           REcoValidationSummary,
           data.frame(
@@ -358,15 +358,15 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             Bias_perc = sum(resid)/sum(yearComparison$fluxTower) * 100
           )
         )
-        
+
         sim$validationSummary <- rbind(sim$validationSummary, REcoValidationSummary)
       } else {
-        
+
         message("One or more respiration estimates is not amongst the chosen Biome-BGC output, skipped.")
-        
+
       }
-      
-    }, 
+
+    },
     compareGPP = {
       if(hasBiomeBGCColumns("daily_gpp", sim$dailyOutput, sim$monthlyAverages, sim$annualAverages)){
         #1. Evaluate daily predictions
@@ -376,10 +376,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           timescale = "day",
           outputVar = "GPP"
         )
-        
+
         # summarize the fit
         resid <- dayComparison$BBGC - dayComparison$fluxTower
-        
+
         gppValidationSummary <- data.frame(
           estimate = "GPP",
           unit = "gc/m2/day",
@@ -392,7 +392,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           Bias = mean(resid),
           Bias_perc = sum(resid)/sum(dayComparison$fluxTower) * 100
         )
-        
+
         #2. Evaluate monthly-level predictions
         monthComparison <- mergeData(
           towerData = sim$towerMonthlyFlux,
@@ -400,10 +400,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           timescale = "month",
           outputVar = "GPP"
         )
-        
+
         # summarize the fit
         resid <- monthComparison$BBGC - monthComparison$fluxTower
-        
+
         gppValidationSummary <- rbind(
           gppValidationSummary,
           data.frame(
@@ -419,7 +419,7 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             Bias_perc = sum(resid)/sum(monthComparison$fluxTower) * 100
           )
         )
-        
+
         #3. Evaluate year-level predictions
         yearComparison <- mergeData(
           towerData = sim$towerAnnualFlux,
@@ -427,10 +427,10 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
           timescale = "year",
           outputVar = "GPP"
         )
-        
+
         # summarize the fit
         resid <- yearComparison$BBGC - yearComparison$fluxTower
-        
+
         gppValidationSummary <- rbind(
           gppValidationSummary,
           data.frame(
@@ -446,16 +446,16 @@ doEvent.BiomeBGC_validationFluxTower = function(sim, eventTime, eventType) {
             Bias_perc = sum(resid)/sum(yearComparison$fluxTower) * 100
           )
         )
-        
+
         sim$validationSummary <- rbind(sim$validationSummary, gppValidationSummary)
       } else {
-        
+
         message("GPP is not amongst the chosen Biome-BGC output, skipped.")
-        
+
       }
-      
+
     },
-    
+
     warning(noEventWarning(sim))
   )
   return(invisible(sim))
@@ -467,7 +467,7 @@ Save <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
   sim <- saveFiles(sim)
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -503,7 +503,7 @@ comparisonBiplot <- function(df, outputVar){
   ggplot(data = df) +
     geom_point(aes(x = fluxTower, y = BBGC), alpha = 0.5) +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
-    scale_x_continuous(expand = c(0, 0), limits = axis_lims) + 
+    scale_x_continuous(expand = c(0, 0), limits = axis_lims) +
     scale_y_continuous(expand = c(0, 0), limits = axis_lims)  +
     labs(x = paste("EC tower", outputVar, "(gC/m^2/day)"), y = paste("Biome-BGC", outputVar, "(gC/m^2/day)")) +
     theme_classic()
@@ -524,7 +524,7 @@ Event1 <- function(sim) {
   # THE NEXT TWO LINES ARE FOR DUMMY UNIT TESTS; CHANGE OR DELETE THEM.
   # sim$event1Test1 <- " this is test for event 1. " # for dummy unit test
   # sim$event1Test2 <- 999 # for dummy unit test
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -535,7 +535,7 @@ Event2 <- function(sim) {
   # THE NEXT TWO LINES ARE FOR DUMMY UNIT TESTS; CHANGE OR DELETE THEM.
   # sim$event2Test1 <- " this is test for event 2. " # for dummy unit test
   # sim$event2Test2 <- 777  # for dummy unit test
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -544,38 +544,38 @@ Event2 <- function(sim) {
   #cacheTags <- c(currentModule(sim), "function:.inputObjects") ## uncomment this if Cache is being used
   dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
-  
+
   if (!suppliedElsewhere('towerCoordinates', sim)) {
-    
+
     stop("User needs to provide the metadata and ancillary data of the EC site.")
-    
+
   }
-  
+
   if (any(!suppliedElsewhere(c('towerDailyFlux', 'towerMonthlyFlux', 'towerAnnualFlux'), sim))) {
-    
+
     stop("User needs to provide the flux data of the EC site.")
-    
+
   }
-  
+
   if (!suppliedElsewhere('studyArea', sim)) {
-    
+
     lat <- sim$towerCoordinates["lat"] |> as.numeric()
     lon <- sim$towerCoordinates["lon"] |> as.numeric()
     sim$studyArea <- vect(data.frame(lon = lon, lat = lat), geom=c("lon", "lat"), crs="EPSG:4326")
     sim$studyArea <- postProcessTo(sim$studyArea, projectTo = P(sim)$targetCRS)
-    
+
   }
-  
+
   if (!suppliedElsewhere('rasterToMatch', sim)) {
-    
-    rtm <- terra::rast(buffer(sim$studyArea, P(sim)$resolution), 
+
+    rtm <- terra::rast(buffer(sim$studyArea, P(sim)$resolution),
                        res = c(P(sim)$resolution, P(sim)$resolution))
     terra::crs(rtm) <-  P(sim)$targetCRS
     rtm[] <- 1
-    
+
     sim$rasterToMatch <- rtm
   }
-  
+
   return(invisible(sim))
 }
 
