@@ -9,8 +9,8 @@ defineModule(sim, list(
   description = "Compares Biome-BGC gross primary productivity predictions to Eddy covariance flux tower estimates.",
   keywords = "",
   authors = c(
-    person("Céline", "Boisvenue", email = "celine.boisvenue@nrcan-rncan.gc.ca", role = c("cre", "ctb")
-    person("Dominique", "Caron", email = "dominique.caron@nrcan-rncan.gc.ca", role = c("aut")),
+    person("Céline", "Boisvenue", email = "celine.boisvenue@nrcan-rncan.gc.ca", role = c("cre", "ctb")),
+    person("Dominique", "Caron", email = "dominique.caron@nrcan-rncan.gc.ca", role = c("aut"))
   ),
   childModules = character(0),
   version = list(BiomeBGC_validationFluxTower = "0.0.0.9000"),
