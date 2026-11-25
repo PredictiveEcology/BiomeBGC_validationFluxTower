@@ -22,18 +22,18 @@ Compares Biome-BGC gross primary productivity predictions to Eddy covariance flu
 Provide a summary of user-visible parameters.
 
 
-|paramName        |paramClass |default      |min |max |paramDesc                                                                                                                  |
-|:----------------|:----------|:------------|:---|:---|:--------------------------------------------------------------------------------------------------------------------------|
-|resolution       |numeric    |250          |NA  |NA  |Defines the resolution for the raster created for the study site.                                                          |
-|targetCRS        |character  |+proj=lc.... |NA  |NA  |Defines the resolution for the raster created for the study site.                                                          |
-|.plots           |character  |screen       |NA  |NA  |Used by Plots function, which can be optionally used here                                                                  |
-|.plotInitialTime |numeric    |0            |NA  |NA  |Describes the simulation time at which the first plot event should occur.                                                  |
-|.plotInterval    |numeric    |NA           |NA  |NA  |Describes the simulation time interval between plot events.                                                                |
-|.saveInitialTime |numeric    |NA           |NA  |NA  |Describes the simulation time at which the first save event should occur.                                                  |
-|.saveInterval    |numeric    |NA           |NA  |NA  |This describes the simulation time interval between save events.                                                           |
-|.studyAreaName   |character  |NA           |NA  |NA  |Human-readable name for the study area used - e.g., a hash of the studyarea obtained using `reproducible::studyAreaName()` |
-|.seed            |list       |             |NA  |NA  |Named list of seeds to use for each event (names).                                                                         |
-|.useCache        |logical    |FALSE        |NA  |NA  |Should caching of events or module be used?                                                                                |
+|paramName        |paramClass |default      |min |max |paramDesc                                                                                                                  |cacheKey |
+|:----------------|:----------|:------------|:---|:---|:--------------------------------------------------------------------------------------------------------------------------|:--------|
+|resolution       |numeric    |250          |NA  |NA  |Defines the resolution for the raster created for the study site.                                                          |TRUE     |
+|targetCRS        |character  |+proj=lc.... |NA  |NA  |Defines the resolution for the raster created for the study site.                                                          |TRUE     |
+|.plots           |character  |screen       |NA  |NA  |Used by Plots function, which can be optionally used here                                                                  |TRUE     |
+|.plotInitialTime |numeric    |0            |NA  |NA  |Describes the simulation time at which the first plot event should occur.                                                  |TRUE     |
+|.plotInterval    |numeric    |NA           |NA  |NA  |Describes the simulation time interval between plot events.                                                                |TRUE     |
+|.saveInitialTime |numeric    |NA           |NA  |NA  |Describes the simulation time at which the first save event should occur.                                                  |TRUE     |
+|.saveInterval    |numeric    |NA           |NA  |NA  |This describes the simulation time interval between save events.                                                           |TRUE     |
+|.studyAreaName   |character  |NA           |NA  |NA  |Human-readable name for the study area used - e.g., a hash of the studyarea obtained using `reproducible::studyAreaName()` |TRUE     |
+|.seed            |list       |             |NA  |NA  |Named list of seeds to use for each event (names).                                                                         |TRUE     |
+|.useCache        |logical    |FALSE        |NA  |NA  |Should caching of events or module be used?                                                                                |TRUE     |
 
 # Events
 
